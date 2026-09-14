@@ -36,7 +36,8 @@ export async function handleScanCommand(
     const failed = options.failOn === "high"
       ? result.summary.critical + result.summary.high > 0
       : options.failOn === "critical" && result.summary.critical > 0;
-    process.exitCode = failed ? 1 : 0;
+    process.exitCode = result.diagnostics.some((d) => d.code === "CERQON_RULE_EVALUATION_ERROR" || d.code === "CERQON_ADAPTER_DISCOVERY_ERROR") ? 3
+      : result.scanStatus !== "complete" ? 2 : failed ? 1 : 0;
 
     if (spinner) {
       spinner.stop();

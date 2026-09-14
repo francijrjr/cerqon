@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { EnvironmentStats, ScanResult } from "@cerqon/types";
+import type { EnvironmentStats, ScanResult, ScanDiagnostic } from "@cerqon/types";
 import { AdapterRegistry } from "@cerqon/adapters";
 import { RiskEngine } from "@cerqon/risk-engine";
 import { collectSecretValues, sanitizeUnknownValue } from "@cerqon/core";
@@ -42,7 +42,8 @@ export class Scanner {
     const targetDir = stat.isDirectory() ? resolvedPath : path.dirname(resolvedPath);
 
     // Discovery phase via registered adapters
-    const configs = await this.adapterRegistry.discoverAll(targetDir);
+    const diagnostics: ScanDiagnostic[] = [];
+    const configs = await this.adapterRegistry.discoverAll(targetDir, diagnostics);
 
     // If scanning a direct file not captured yet, attempt generic parsing
     if (!stat.isDirectory() && configs.length === 0) {
@@ -50,7 +51,7 @@ export class Scanner {
         .getAdapters()
         .find((a) => a.name === "Generic MCP");
       if (genericAdapter) {
-        const discovered = await genericAdapter.discover(targetDir);
+        const discovered = await genericAdapter.discover(targetDir, diagnostics);
         configs.push(...discovered);
       }
     }
@@ -77,16 +78,18 @@ export class Scanner {
     }
 
     // Risk correlation & scoring
-    const { findings, scoreResult } = this.riskEngine.evaluateAll(configs);
+    const { findings, scoreResult } = this.riskEngine.evaluateAll(configs, diagnostics);
 
     const durationMs = Date.now() - startTime;
 
     return sanitizeUnknownValue({
       schemaVersion: "1",
+      scanStatus: diagnostics.length ? (configs.length ? "partial" : "failed") : "complete",
+      diagnostics,
       cerqonVersion: this.version,
       timestamp: new Date().toISOString(),
       targetPath: resolvedPath,
-      score: scoreResult.score,
+      score: diagnostics.length ? null : scoreResult.score,
       summary: scoreResult.summary,
       environment,
       findings,

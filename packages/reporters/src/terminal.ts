@@ -33,13 +33,15 @@ export class TerminalReporter {
     lines.push(chalk.bold("Security Score"));
     lines.push(chalk.dim("────────────────────────────────"));
     const scoreColor =
-      result.score >= 80
+      (result.score ?? 0) >= 80
         ? chalk.bold.green
-        : result.score >= 50
+        : (result.score ?? 0) >= 50
         ? chalk.bold.yellow
         : chalk.bold.red;
 
-    lines.push(`${scoreColor(`${result.score} / 100`)}\n`);
+    lines.push(result.score === null ? "Unavailable: scan incomplete\n" : `${scoreColor(`${result.score} / 100`)}\n`);
+    lines.push(`Scan status: ${result.scanStatus}`);
+    for (const diagnostic of result.diagnostics) lines.push(`${diagnostic.code}: ${diagnostic.message} ${diagnostic.file ?? ""}`);
 
     lines.push(
       `${chalk.bold.red("CRITICAL").padEnd(33)} ${result.summary.critical}`
@@ -56,7 +58,7 @@ export class TerminalReporter {
 
     // Findings section
     if (result.findings.length === 0) {
-      lines.push(chalk.bold.green("No security findings detected.\n"));
+      lines.push(result.scanStatus === "complete" ? chalk.bold.green("No security findings detected.\n") : "Analysis incomplete; no clean security verdict is available.\n");
       return lines.join("\n");
     }
 

@@ -1,4 +1,4 @@
-import type { AgentAdapter, AgentConfiguration } from "@cerqon/types";
+import type { AgentAdapter, AgentConfiguration, ScanDiagnostic } from "@cerqon/types";
 import { ClaudeDesktopAdapter } from "./claude.js";
 import { CursorAdapter } from "./cursor.js";
 import { VSCodeRooAdapter } from "./vscode.js";
@@ -28,20 +28,21 @@ export class AdapterRegistry {
     return [...this.adapters];
   }
 
-  async discoverAll(targetDir: string): Promise<AgentConfiguration[]> {
+  async discoverAll(targetDir: string, diagnostics: ScanDiagnostic[] = []): Promise<AgentConfiguration[]> {
     const allConfigs: AgentConfiguration[] = [];
     const seenPaths = new Set<string>();
 
     for (const adapter of this.adapters) {
-      const isDetected = await adapter.detect(targetDir);
-      if (isDetected) {
-        const configs = await adapter.discover(targetDir);
+      try {
+        const configs = await adapter.discover(targetDir, diagnostics);
         for (const cfg of configs) {
           if (!seenPaths.has(cfg.sourcePath)) {
             seenPaths.add(cfg.sourcePath);
             allConfigs.push(cfg);
           }
         }
+      } catch {
+        diagnostics.push({ code: "CERQON_ADAPTER_DISCOVERY_ERROR", severity: "error", message: "Adapter discovery failed.", file: targetDir, adapter: adapter.name });
       }
     }
 

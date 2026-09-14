@@ -1,4 +1,4 @@
-import type { AgentConfiguration, Finding, Rule } from "@cerqon/types";
+import type { AgentConfiguration, Finding, Rule, ScanDiagnostic } from "@cerqon/types";
 import { ACTIVE_CERQON_RULES, ALL_CERQON_RULES } from "./rules/index.js";
 import { calculateRiskScore, type ScoreCalculationResult } from "./score.js";
 import { collectSecretValues, sanitizeFinding } from "@cerqon/core";
@@ -20,7 +20,8 @@ export class RiskEngine {
 
   evaluateConfig(
     config: AgentConfiguration,
-    allConfigs?: AgentConfiguration[]
+    allConfigs?: AgentConfiguration[],
+    diagnostics: ScanDiagnostic[] = []
   ): Finding[] {
     const findings: Finding[] = [];
     const context = { config, allConfigs };
@@ -30,9 +31,8 @@ export class RiskEngine {
       try {
         const ruleFindings = rule.evaluate(context);
         findings.push(...ruleFindings);
-      } catch (err) {
-        // Safe evaluation guard
-        console.error(`Error evaluating rule ${rule.id} on ${config.name}:`, err);
+      } catch {
+        diagnostics.push({ code: "CERQON_RULE_EVALUATION_ERROR", severity: "error", message: `Rule ${rule.id} could not be evaluated.`, file: config.sourcePath, adapter: config.adapterName });
       }
     }
 
@@ -40,14 +40,14 @@ export class RiskEngine {
     return findings.map((finding) => sanitizeFinding(finding, secrets));
   }
 
-  evaluateAll(configs: AgentConfiguration[]): {
+  evaluateAll(configs: AgentConfiguration[], diagnostics: ScanDiagnostic[] = []): {
     findings: Finding[];
     scoreResult: ScoreCalculationResult;
   } {
     const allFindings: Finding[] = [];
 
     for (const config of configs) {
-      const findings = this.evaluateConfig(config, configs);
+      const findings = this.evaluateConfig(config, configs, diagnostics);
       allFindings.push(...findings);
     }
 

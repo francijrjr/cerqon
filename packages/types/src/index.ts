@@ -100,10 +100,12 @@ export interface EnvironmentStats {
 
 export interface ScanResult {
   schemaVersion: "1";
+  scanStatus: "complete" | "partial" | "failed";
+  diagnostics: ScanDiagnostic[];
   cerqonVersion: string;
   timestamp: string;
   targetPath: string;
-  score: number;
+  score: number | null;
   summary: ScanSummary;
   environment: EnvironmentStats;
   findings: Finding[];
@@ -113,6 +115,14 @@ export interface ScanResult {
 export interface AgentAdapter {
   name: string;
   detect(targetDir: string): Promise<boolean>;
-  discover(targetDir: string): Promise<AgentConfiguration[]>;
+  discover(targetDir: string, diagnostics?: ScanDiagnostic[]): Promise<AgentConfiguration[]>;
   scan?(config: AgentConfiguration): Promise<Finding[]>;
+}
+
+export interface ScanDiagnostic {
+  code: string;
+  severity: "warning" | "error";
+  message: string;
+  file?: string;
+  adapter?: string;
 }

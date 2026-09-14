@@ -2,15 +2,26 @@ import type { MCPServer, MCPTransport } from "@cerqon/types";
 
 export function parseMCPServers(rawServers: unknown): MCPServer[] {
   if (!rawServers || typeof rawServers !== "object") {
-    return [];
+    throw new Error("Invalid servers map");
   }
+  if (Array.isArray(rawServers)) throw new Error("Invalid servers map");
 
   const servers: MCPServer[] = [];
   const entries = Object.entries(rawServers as Record<string, unknown>);
 
   for (const [serverName, rawConfig] of entries) {
-    if (!rawConfig || typeof rawConfig !== "object") continue;
+    if (!rawConfig || typeof rawConfig !== "object" || Array.isArray(rawConfig)) throw new Error("Invalid server");
     const cfg = rawConfig as Record<string, unknown>;
+    for (const field of ["command", "url", "transport"]) {
+      if (cfg[field] !== undefined && typeof cfg[field] !== "string") throw new Error("Invalid server string field");
+    }
+    for (const field of ["args", "autoApprove", "rootPaths"]) {
+      const value = cfg[field];
+      if (value !== undefined && (!Array.isArray(value) || value.some((v) => typeof v !== "string"))) throw new Error("Invalid server list");
+    }
+    if (cfg.disabled !== undefined && typeof cfg.disabled !== "boolean") throw new Error("Invalid disabled flag");
+    if (cfg.env !== undefined && (!cfg.env || typeof cfg.env !== "object" || Array.isArray(cfg.env) || Object.values(cfg.env).some((v) => typeof v !== "string"))) throw new Error("Invalid environment");
+    if (!cfg.command && !cfg.url && !cfg.rootPaths) throw new Error("Missing server source");
 
     let transport: MCPTransport = "unknown";
     if (cfg.transport === "stdio" || cfg.transport === "http" || cfg.transport === "sse") {
