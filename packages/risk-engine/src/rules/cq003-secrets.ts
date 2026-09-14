@@ -105,6 +105,33 @@ export const cq003ExposedSecret: Rule = {
       checkEnvBlock(server.env, server.name);
     }
 
+    const inspectValue = (value: unknown, location: string, seen = new WeakSet<object>()): void => {
+      if (typeof value === "string") {
+        if (isSecretReference(value)) return;
+        const matched = KNOWN_SECRET_PATTERNS.find((pattern) => pattern.regex.test(value));
+        if (!matched) return;
+        const masked = maskSecret(value);
+        findings.push(sanitizeFinding({
+          id: `CQ-003-${location}-${matched.name}`.replace(/[^a-zA-Z0-9-]/g, "-"), ruleId: "CQ-003", title: "Exposed Agent Secret",
+          description: `Secret detected in configuration field ${location}: ${masked}`, severity: "critical", confidence: "confirmed",
+          location: { file: config.sourcePath }, evidence: `${location}: ${masked} (${matched.name})`,
+          impact: "Credentials embedded in configuration may be exposed through logs or repository access.",
+          recommendation: "Reference credentials through runtime environment variables.", metadata: { agentName: config.name, field: location, maskedValue: masked },
+        }, [value]));
+        return;
+      }
+      if (!value || typeof value !== "object" || seen.has(value)) return;
+      seen.add(value);
+      for (const [key, child] of Object.entries(value)) inspectValue(child, `${location}.${key}`, seen);
+    };
+    for (const server of config.servers) {
+      if (server.disabled) continue;
+      inspectValue(server.url, `server.${server.name}.url`);
+      inspectValue(server.args, `server.${server.name}.args`);
+      inspectValue(server.metadata, `server.${server.name}.metadata`);
+    }
+    inspectValue(config.metadata, "config.metadata");
+    inspectValue(config.tools?.map((tool) => tool.parameters), "tools.parameters");
     return findings;
   },
 };

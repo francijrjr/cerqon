@@ -6,24 +6,41 @@
     "cerqon": "bin/cerqon.js"
   },
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "description": "Open-source security scanner for autonomous AI agents and MCP configurations.",
+  "keywords": ["ai-security", "mcp", "model-context-protocol", "ai-agents", "devsecops", "static-analysis", "security", "cli"],
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "build": "tsc && node scripts/bundle.mjs",
+    "start": "node dist/index.js",
+    "prepack": "pnpm run build"
   },
   "dependencies": {
-    "@cerqon/adapters": "workspace:*",
-    "@cerqon/core": "workspace:*",
-    "@cerqon/reporters": "workspace:*",
-    "@cerqon/risk-engine": "workspace:*",
-    "@cerqon/scanner": "workspace:*",
-    "@cerqon/types": "workspace:*",
     "chalk": "^5.4.1",
     "commander": "^13.1.0",
     "ora": "^8.2.0",
-    "zod": "^3.24.2"
+    "zod": "^3.24.2",
+    "npm-package-arg": "^12.0.2",
+    "semver": "^7.8.5"
   },
-  "devDependencies": {
-    "typescript": "^5.7.3"
+  "devDependencies": { "typescript": "^5.7.3", "esbuild": "^0.25.0" },
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist/index.js",
+    "bin",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/francijrjr/cerqon.git",
+    "directory": "apps/cli"
+  },
+  "homepage": "https://github.com/francijrjr/cerqon#readme",
+  "bugs": {
+    "url": "https://github.com/francijrjr/cerqon/issues"
   }
 }
