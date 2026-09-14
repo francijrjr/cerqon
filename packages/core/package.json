@@ -15,9 +15,13 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@cerqon/types": "workspace:*"
+    "@cerqon/types": "workspace:*",
+    "npm-package-arg": "^12.0.2",
+    "semver": "^7.8.5"
   },
   "devDependencies": {
+    "@types/npm-package-arg": "^6.1.4",
+    "@types/semver": "^7.8.0",
     "typescript": "^5.7.3"
   }
 }
