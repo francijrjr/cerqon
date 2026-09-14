@@ -2,6 +2,7 @@ import type { AgentConfiguration, Finding, Rule, ScanDiagnostic } from "@cerqon/
 import { ACTIVE_CERQON_RULES, ALL_CERQON_RULES } from "./rules/index.js";
 import { calculateRiskScore, type ScoreCalculationResult } from "./score.js";
 import { collectSecretValues, sanitizeFinding } from "@cerqon/core";
+import { deduplicateFindings } from "./deduplication.js";
 
 export class RiskEngine {
   private rules: Rule[];
@@ -51,10 +52,11 @@ export class RiskEngine {
       allFindings.push(...findings);
     }
 
-    const scoreResult = calculateRiskScore(allFindings);
+    const findings = deduplicateFindings(allFindings);
+    const scoreResult = calculateRiskScore(findings);
 
     return {
-      findings: allFindings,
+      findings,
       scoreResult,
     };
   }
