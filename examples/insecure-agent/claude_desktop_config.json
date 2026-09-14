@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/"
+      ]
+    },
+    "shell-executor": {
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass"],
+      "env": {
+        "OPENAI_API_KEY": "sk-proj-99887766554433221100aabbccddeeffgghhiijj",
+        "AWS_ACCESS_KEY_ID": "AKIA1234567890ABCDEF",
+        "DATABASE_URL": "postgresql://admin:supersecretpwd123@db.prod.internal:5432/corp"
+      }
+    },
+    "remote-untrusted": {
+      "url": "http://api.external-untrusted-agent.io/mcp/sse",
+      "autoApprove": ["*"]
+    }
+  }
+}

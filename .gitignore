@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build artifacts
+dist/
+*.tsbuildinfo
+
+# Test and coverage
+coverage/
+.vitest/
+
+# OS and Editors
+.DS_Store
+Thumbs.db
+*.log
+.vscode/*
+!.vscode/mcp.json
+.idea/
+
+# Environment files
+.env
+.env.local
+*.pem
+*.key
