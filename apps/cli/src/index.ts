@@ -37,6 +37,13 @@ program
     handleDoctorCommand();
   });
 
+program
+  .command("version")
+  .description("Display CERQON version")
+  .action(() => {
+    console.log(`CERQON v${VERSION}`);
+  });
+
 // Architecture placeholders for future commands
 program
   .command("agents")

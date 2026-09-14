@@ -1,10 +1,10 @@
+import { JsonReporter, TerminalReporter } from "@cerqon/reporters";
+import { Scanner } from "@cerqon/scanner";
+import chalk from "chalk";
 import fs from "node:fs/promises";
 import path from "node:path";
-import chalk from "chalk";
 import ora from "ora";
 import { z } from "zod";
-import { Scanner } from "@cerqon/scanner";
-import { JsonReporter, TerminalReporter } from "@cerqon/reporters";
 
 const ScanOptionsSchema = z.object({
   verbose: z.boolean().optional(),
@@ -16,7 +16,7 @@ export type ScanCliOptions = z.infer<typeof ScanOptionsSchema>;
 
 export async function handleScanCommand(
   targetPath = ".",
-  rawOptions: unknown
+  rawOptions: unknown,
 ): Promise<void> {
   const options = ScanOptionsSchema.parse(rawOptions);
   const resolvedTarget = path.resolve(targetPath);
@@ -49,7 +49,9 @@ export async function handleScanCommand(
     }
 
     const terminalReporter = new TerminalReporter();
-    const output = terminalReporter.format(result, { verbose: options.verbose });
+    const output = terminalReporter.format(result, {
+      verbose: options.verbose,
+    });
     console.log(output);
 
     if (options.output) {
@@ -57,7 +59,9 @@ export async function handleScanCommand(
       const jsonOutput = jsonReporter.format(result);
       await fs.writeFile(path.resolve(options.output), jsonOutput, "utf-8");
       console.log(
-        chalk.green(`\nReport successfully saved to ${chalk.bold(options.output)}`)
+        chalk.green(
+          `\nReport successfully saved to ${chalk.bold(options.output)}`,
+        ),
       );
     }
 
@@ -70,7 +74,7 @@ export async function handleScanCommand(
       spinner.fail(chalk.red("Scan failed."));
     }
     console.error(
-      chalk.red(`\nError executing CERQON scan: ${(error as Error).message}`)
+      chalk.red(`\nError executing CERQON scan: ${(error as Error).message}`),
     );
     process.exitCode = 2;
   }
