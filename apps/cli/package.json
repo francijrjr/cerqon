@@ -21,7 +21,12 @@
     "npm-package-arg": "^12.0.2",
     "semver": "^7.8.5"
   },
-  "devDependencies": { "typescript": "^5.7.3", "esbuild": "^0.25.0" },
+  "devDependencies": {
+    "typescript": "^5.7.3", "esbuild": "^0.25.0",
+    "@cerqon/adapters": "workspace:*", "@cerqon/core": "workspace:*",
+    "@cerqon/reporters": "workspace:*", "@cerqon/risk-engine": "workspace:*",
+    "@cerqon/scanner": "workspace:*", "@cerqon/types": "workspace:*"
+  },
   "license": "Apache-2.0",
   "engines": {
     "node": ">=20.19.0"
