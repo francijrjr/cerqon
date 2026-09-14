@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import { isSupportedNodeVersion, NODE_REQUIREMENT } from "@cerqon/core";
 import { AdapterRegistry } from "@cerqon/adapters";
 import type { AgentAdapter } from "@cerqon/types";
 import { ACTIVE_CERQON_RULES, ALL_CERQON_RULES } from "@cerqon/risk-engine";
@@ -9,14 +10,14 @@ export function handleDoctorCommand(): void {
 
   // Check Node version
   const nodeVersion = process.versions.node;
-  const major = parseInt(nodeVersion.split(".")[0], 10);
-  if (major >= 18) {
+  const supported = isSupportedNodeVersion(nodeVersion);
+  if (supported) {
     console.log(
-      `${chalk.green("✔")} Node.js runtime: ${chalk.bold(`v${nodeVersion}`)} (Supported >= 18)`
+      `${chalk.green("✔")} Node.js runtime: ${chalk.bold(`v${nodeVersion}`)} (Supported ${NODE_REQUIREMENT})`
     );
   } else {
     console.log(
-      `${chalk.red("✖")} Node.js runtime: ${chalk.bold(`v${nodeVersion}`)} (Requires >= 18)`
+      `${chalk.red("✖")} Node.js runtime: ${chalk.bold(`v${nodeVersion}`)} (Requires ${NODE_REQUIREMENT})`
     );
   }
 
@@ -46,6 +47,7 @@ export function handleDoctorCommand(): void {
   );
 
   console.log(
-    chalk.cyan("\nEnvironment is ready to scan AI agent & MCP configurations.\n")
+    chalk.cyan(supported ? "\nEnvironment is ready to scan AI agent & MCP configurations.\n" : "\nUpgrade Node.js before scanning.\n")
   );
+  process.exitCode = supported ? 0 : 2;
 }
