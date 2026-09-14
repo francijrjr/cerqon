@@ -16,16 +16,26 @@ inputs:
 outputs:
   score:
     description: Security score, when the scan is complete.
+    value: ${{ steps.scan.outputs.score }}
   critical:
     description: Critical finding count.
+    value: ${{ steps.scan.outputs.critical }}
   high:
     description: High finding count.
+    value: ${{ steps.scan.outputs.high }}
   scan-status:
     description: Complete, partial, or failed.
+    value: ${{ steps.scan.outputs.scan-status }}
 runs:
   using: composite
   steps:
     - shell: bash
+      run: |
+        corepack enable
+        pnpm install --frozen-lockfile
+        pnpm run build
+    - id: scan
+      shell: bash
       env:
         CERQON_PATH: ${{ inputs.path }}
         CERQON_FAIL_ON: ${{ inputs.fail-on }}
