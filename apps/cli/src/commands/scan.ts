@@ -10,6 +10,7 @@ const ScanOptionsSchema = z.object({
   verbose: z.boolean().optional(),
   json: z.boolean().optional(),
   output: z.string().optional(),
+  failOn: z.enum(["critical", "high"]).optional(),
 });
 
 export type ScanCliOptions = z.infer<typeof ScanOptionsSchema>;
@@ -65,8 +66,10 @@ export async function handleScanCommand(
       );
     }
 
-    // Set exit code if critical findings exist (useful for CI future runs)
-    if (result.summary.critical > 0) {
+    const failed = options.failOn === "high"
+      ? result.summary.critical + result.summary.high > 0
+      : result.summary.critical > 0;
+    if (failed) {
       process.exitCode = 1;
     }
   } catch (error) {
@@ -76,6 +79,6 @@ export async function handleScanCommand(
     console.error(
       chalk.red(`\nError executing CERQON scan: ${(error as Error).message}`),
     );
-    process.exitCode = 2;
+    process.exitCode = error instanceof Error && error.name === "ScanTargetNotFoundError" ? 2 : 3;
   }
 }

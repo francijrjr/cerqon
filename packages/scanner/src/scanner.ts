@@ -4,6 +4,13 @@ import type { EnvironmentStats, ScanResult } from "@cerqon/types";
 import { AdapterRegistry } from "@cerqon/adapters";
 import { RiskEngine } from "@cerqon/risk-engine";
 
+export class ScanTargetNotFoundError extends Error {
+  constructor(public readonly targetPath: string) {
+    super(`Target does not exist: ${targetPath}`);
+    this.name = "ScanTargetNotFoundError";
+  }
+}
+
 export interface ScannerOptions {
   version?: string;
   verbose?: boolean;
@@ -25,7 +32,12 @@ export class Scanner {
     const resolvedPath = path.resolve(targetPath);
 
     // Check if target exists
-    const stat = await fs.stat(resolvedPath);
+    let stat;
+    try { stat = await fs.stat(resolvedPath); }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") throw new ScanTargetNotFoundError(targetPath);
+      throw error;
+    }
     const targetDir = stat.isDirectory() ? resolvedPath : path.dirname(resolvedPath);
 
     // Discovery phase via registered adapters
@@ -69,6 +81,7 @@ export class Scanner {
     const durationMs = Date.now() - startTime;
 
     return {
+      schemaVersion: "1",
       cerqonVersion: this.version,
       timestamp: new Date().toISOString(),
       targetPath: resolvedPath,

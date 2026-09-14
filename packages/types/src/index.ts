@@ -27,6 +27,8 @@ export interface Finding {
   impact: string;
   recommendation: string;
   metadata?: Record<string, unknown>;
+  confidence?: "confirmed" | "likely" | "heuristic";
+  fingerprint?: string;
 }
 
 export type MCPTransport = "stdio" | "http" | "sse" | "unknown";
@@ -97,6 +99,7 @@ export interface EnvironmentStats {
 }
 
 export interface ScanResult {
+  schemaVersion: "1";
   cerqonVersion: string;
   timestamp: string;
   targetPath: string;

@@ -15,6 +15,12 @@ export interface ScoreCalculationResult {
 }
 
 export function calculateRiskScore(findings: Finding[]): ScoreCalculationResult {
+  const unique = new Map<string, Finding>();
+  for (const finding of findings) {
+    const key = finding.fingerprint ?? `${finding.ruleId}:${finding.location?.file ?? ""}:${finding.location?.line ?? ""}:${finding.evidence ?? finding.id}`;
+    unique.set(key, finding);
+  }
+  findings = [...unique.values()];
   const summary: ScanSummary = {
     critical: 0,
     high: 0,

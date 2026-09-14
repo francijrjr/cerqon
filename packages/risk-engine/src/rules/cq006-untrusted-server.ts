@@ -2,9 +2,9 @@ import type { Finding, Rule, RuleContext } from "@cerqon/types";
 
 export const cq006UntrustedServer: Rule = {
   id: "CQ-006",
-  title: "Untrusted MCP Server",
+  title: "Unverified MCP Source",
   description:
-    "Flags MCP servers connecting to unencrypted or unverified remote endpoints, unpinned sources, or wildcard auto-approval configurations.",
+    "Flags MCP sources that are remote or lack an immutable package/version pin. Transport and approval policy are separate concerns.",
   severity: "high",
   category: "supply-chain",
   isImplemented: true,
@@ -79,11 +79,15 @@ export const cq006UntrustedServer: Rule = {
 
       // 3. Check unpinned remote source in command or args (e.g. npx with direct git/http url)
       if (server.args) {
-        const hasUnpinnedRemote = server.args.some(
+        const hasPinnedNpxPackage = server.command === "npx" && server.args.some((arg) => /@[0-9]+(?:\.[0-9]+)*/.test(arg));
+        const hasUnpinnedRemote = !hasPinnedNpxPackage && server.args.some(
           (arg) =>
             arg.startsWith("git+") ||
             arg.startsWith("https://") ||
-            arg.startsWith("github:")
+            arg.startsWith("http://") ||
+            arg.startsWith("github:") ||
+            (/^@?[\w.-]+(?:\/[\w.-]+)?$/.test(arg) && server.command === "npx" && !arg.startsWith(".") && !arg.includes("@")) ||
+            (server.command === "npx" && /@latest$/.test(arg))
         );
         if (hasUnpinnedRemote) {
           findings.push({

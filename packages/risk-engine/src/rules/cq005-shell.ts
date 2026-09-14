@@ -3,9 +3,9 @@ import { detectShellCapability } from "@cerqon/core";
 
 export const cq005UnsafeShell: Rule = {
   id: "CQ-005",
-  title: "Unsafe Shell Capability",
+  title: "Dangerous Shell Capability",
   description:
-    "Detects MCP servers or agent tools providing terminal command execution capabilities without human approval policies.",
+    "Detects MCP servers or agent tools providing terminal command execution capabilities.",
   severity: "high",
   category: "execution",
   isImplemented: true,
