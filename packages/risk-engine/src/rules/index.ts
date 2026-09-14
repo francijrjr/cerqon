@@ -4,6 +4,10 @@ import { cq003ExposedSecret } from "./cq003-secrets.js";
 import { cq005UnsafeShell } from "./cq005-shell.js";
 import { cq006UntrustedServer } from "./cq006-untrusted-server.js";
 import { futureRules } from "./future-rules.js";
+import { cq007MissingApproval } from "./cq007-approval.js";
+import { cq008UnsafeTransport } from "./cq008-transport.js";
+export * from "./cq007-approval.js";
+export * from "./cq008-transport.js";
 
 export * from "./cq002-filesystem.js";
 export * from "./cq003-secrets.js";
@@ -25,8 +29,8 @@ export const ALL_CERQON_RULES: Rule[] = [
   // CQ-006 (Active)
   cq006UntrustedServer,
   // CQ-007 through CQ-012
-  futureRules.find((r) => r.id === "CQ-007")!,
-  futureRules.find((r) => r.id === "CQ-008")!,
+  cq007MissingApproval,
+  cq008UnsafeTransport,
   futureRules.find((r) => r.id === "CQ-009")!,
   futureRules.find((r) => r.id === "CQ-010")!,
   futureRules.find((r) => r.id === "CQ-011")!,

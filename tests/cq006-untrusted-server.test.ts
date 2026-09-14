@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { cq006UntrustedServer } from "@cerqon/risk-engine";
+import { cq006UntrustedServer, cq007MissingApproval, cq008UnsafeTransport } from "@cerqon/risk-engine";
 import type { AgentConfiguration } from "@cerqon/types";
 
 describe("Rule CQ-006: Untrusted MCP Server", () => {
@@ -17,9 +17,10 @@ describe("Rule CQ-006: Untrusted MCP Server", () => {
       ],
     };
 
-    const findings = cq006UntrustedServer.evaluate({ config });
+    expect(cq006UntrustedServer.evaluate({ config })).toHaveLength(0);
+    const findings = cq008UnsafeTransport.evaluate({ config });
     expect(findings).toHaveLength(1);
-    expect(findings[0].ruleId).toBe("CQ-006");
+    expect(findings[0].ruleId).toBe("CQ-008");
     expect(findings[0].severity).toBe("high");
     expect(findings[0].description).toContain("unencrypted HTTP");
   });
@@ -38,13 +39,14 @@ describe("Rule CQ-006: Untrusted MCP Server", () => {
       ],
     };
 
-    const findings = cq006UntrustedServer.evaluate({ config });
+    expect(cq006UntrustedServer.evaluate({ config })).toHaveLength(0);
+    const findings = cq007MissingApproval.evaluate({ config });
     expect(findings).toHaveLength(1);
-    expect(findings[0].ruleId).toBe("CQ-006");
+    expect(findings[0].ruleId).toBe("CQ-007");
     expect(findings[0].description).toContain("wildcard auto-approval");
   });
 
-  it("should pass secure HTTPS endpoints and explicit auto-approval", () => {
+  it("does not infer source trust from HTTPS or explicit tool approval", () => {
     const config: AgentConfiguration = {
       id: "agent-secure",
       name: "TLS Agent",
