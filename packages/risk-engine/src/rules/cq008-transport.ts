@@ -5,10 +5,14 @@ export const cq008UnsafeTransport: Rule = {
   description: "Detects unencrypted remote HTTP or WebSocket MCP transport.",
   impact: "Cleartext transport exposes agent traffic to interception or modification.",
   recommendation: "Use encrypted transport; TLS does not establish source trust.",
-  evaluate({ config }) {
+  evaluate({ config, diagnostics }) {
     return config.servers.filter((s) => {
       if (s.disabled || !s.url) return false;
-      const url = new URL(s.url);
+      let url: URL;
+      try { url = new URL(s.url); } catch {
+        diagnostics?.push({ code: "CERQON_INVALID_MCP_URL", severity: "warning", message: "MCP server URL is malformed and could not be evaluated.", file: config.sourcePath, adapter: config.adapterName });
+        return false;
+      }
       const local = ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname.toLowerCase());
       return !local && ["http:", "ws:"].includes(url.protocol);
     }).map((server) => ({

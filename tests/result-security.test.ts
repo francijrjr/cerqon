@@ -6,6 +6,7 @@ import { Scanner } from "@cerqon/scanner";
 import { JsonReporter, TerminalReporter } from "@cerqon/reporters";
 import { handleScanCommand } from "../apps/cli/src/commands/scan.js";
 import { cq005UnsafeShell, cq008UnsafeTransport } from "@cerqon/risk-engine";
+import type { ScanDiagnostic } from "@cerqon/types";
 
 const dirs: string[] = [];
 afterEach(async () => { vi.restoreAllMocks(); process.exitCode = 0; await Promise.all(dirs.splice(0).map((dir) => fs.rm(dir, { recursive: true, force: true }))); });
@@ -47,4 +48,13 @@ it("does not confuse loopback with a hostname or URL containing localhost", () =
     { name: "local", url: "http://127.0.0.1:4000" },
   ] };
   expect(cq008UnsafeTransport.evaluate({ config })).toHaveLength(2);
+});
+it("isolates malformed MCP URLs and continues evaluating later servers", () => {
+  const diagnostics: ScanDiagnostic[] = [];
+  const config = { id: "x", name: "x", sourcePath: "x", adapterName: "test", servers: [
+    { name: "malformed", url: "not a URL" }, { name: "remote", url: "http://remote.example.com" },
+  ] };
+  const findings = cq008UnsafeTransport.evaluate({ config, diagnostics });
+  expect(diagnostics.map((d) => d.code)).toContain("CERQON_INVALID_MCP_URL");
+  expect(findings.map((finding) => finding.metadata?.serverName)).toContain("remote");
 });

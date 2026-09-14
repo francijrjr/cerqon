@@ -67,6 +67,7 @@ export interface AgentConfiguration {
 export interface RuleContext {
   config: AgentConfiguration;
   allConfigs?: AgentConfiguration[];
+  diagnostics?: ScanDiagnostic[];
 }
 
 export interface Rule {
