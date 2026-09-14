@@ -53,7 +53,7 @@ export const cq002UnrestrictedFilesystem: Rule = {
             ruleId: "CQ-002",
             title: "Unrestricted Filesystem Access",
             description: `MCP Server '${server.name}' mounts dangerous path '${p}'. ${assessment.reason || ""}`,
-            severity: "critical",
+            severity: assessment.riskLevel === "safe" ? "info" : assessment.riskLevel,
             location: {
               file: config.sourcePath,
             },
@@ -65,7 +65,7 @@ export const cq002UnrestrictedFilesystem: Rule = {
             metadata: {
               agentName: config.name,
               serverName: server.name,
-              targetPath: p,
+              targetPath: assessment.normalizedPath,
               isRoot: assessment.isRoot,
             },
           });

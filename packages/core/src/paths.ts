@@ -1,95 +1,38 @@
+import path from "node:path";
 
 export interface PathSafetyAssessment {
   isDangerous: boolean;
   isRoot: boolean;
+  riskLevel: "critical" | "high" | "medium" | "safe";
   reason?: string;
   normalizedPath: string;
 }
 
-const SYSTEM_ROOTS = new Set([
-  "/",
-  "\\",
-  "c:\\",
-  "c:/",
-  "d:\\",
-  "d:/",
-  "e:\\",
-  "e:/",
-]);
-
-const SENSITIVE_SYSTEM_PREFIXES = [
-  "/etc",
-  "/var",
-  "/root",
-  "/usr",
-  "/bin",
-  "/sbin",
-  "c:\\windows",
-  "c:\\program files",
-  "c:\\program files (x86)",
-  "c:\\users",
-  "/users",
-  "/home",
-];
-
+/** Lexical classification is platform independent; it cannot resolve symlinks or ACLs. */
 export function assessPathSafety(targetPath: string): PathSafetyAssessment {
-  if (!targetPath || typeof targetPath !== "string") {
-    return { isDangerous: false, isRoot: false, normalizedPath: "" };
+  const input = targetPath.trim();
+  const windows = /^[a-z]:/i.test(input) || input.startsWith("\\\\");
+  const normalized = windows ? path.win32.normalize(input).replace(/\\/g, "/").toLowerCase()
+    : path.posix.normalize(input.replace(/\\/g, "/"));
+  const value = normalized.replace(/\/$/, "") || "/";
+  const result = (riskLevel: PathSafetyAssessment["riskLevel"], reason?: string, isRoot = false): PathSafetyAssessment =>
+    ({ isDangerous: riskLevel !== "safe", isRoot, riskLevel, reason, normalizedPath: normalized });
+  if (!input) return result("safe");
+  if (value === "/" || /^[a-z]:$/i.test(value) || (windows && /^\/\/[^/]+\/[^/]+$/.test(value))) {
+    return result("critical", "Filesystem or volume root grants broad host access.", true);
   }
-
-  const trimmed = targetPath.trim();
-  const lower = trimmed.toLowerCase();
-
-  // Check if exactly root
-  if (SYSTEM_ROOTS.has(lower) || lower === "/") {
-    return {
-      isDangerous: true,
-      isRoot: true,
-      reason: "Root directory mount allows full access to the entire host filesystem.",
-      normalizedPath: trimmed,
-    };
+  const within = (root: string) => value === root || value.startsWith(root + "/");
+  if (within("/root") || /(?:^|\/)\.(?:ssh|aws|gnupg)(?:\/|$)/.test(value)) {
+    return result("critical", "Path exposes privileged home or credential directories.");
   }
-
-  // Windows drive root (e.g. C:, C:\, C:/)
-  if (/^[a-zA-Z]:[\\/]?$/.test(trimmed)) {
-    return {
-      isDangerous: true,
-      isRoot: true,
-      reason: "Drive root access grants unconstrained file modification across the entire storage volume.",
-      normalizedPath: trimmed,
-    };
+  const systemRoots = windows
+    ? ["/windows", "/program files", "/program files (x86)", "/programdata"].map((root) => value.slice(0, 2) + root)
+    : ["/etc", "/usr", "/var", "/bin", "/sbin"];
+  if (systemRoots.some(within) || ["/home", "/users", "~"].includes(value) || /^[a-z]:\/users$/.test(value)) {
+    return result("high", "Broad system or shared home directory is exposed.");
   }
-
-  // Check sensitive system directories
-  const normalizedForward = trimmed.replace(/\\/g, "/").toLowerCase();
-  for (const sysPrefix of SENSITIVE_SYSTEM_PREFIXES) {
-    const sysForward = sysPrefix.replace(/\\/g, "/").toLowerCase();
-    if (
-      normalizedForward === sysForward ||
-      normalizedForward === sysForward + "/"
-    ) {
-      return {
-        isDangerous: true,
-        isRoot: false,
-        reason: `Access to broad system or user directory '${trimmed}' compromises host isolation.`,
-        normalizedPath: trimmed,
-      };
-    }
+  if (/^\/(?:home|users)\/[^/]+$/.test(value) || /^[a-z]:\/users\/[^/]+$/.test(value) || value === ".." || value.startsWith("../")) {
+    return result("medium", "User-wide or parent-directory scope requires review against intended project boundaries.");
   }
-
-  // Check home directory alias
-  if (trimmed === "~" || trimmed === "~/" || trimmed === "~\\") {
-    return {
-      isDangerous: true,
-      isRoot: false,
-      reason: "Home directory mount exposes user credentials, SSH keys, and all personal documents.",
-      normalizedPath: trimmed,
-    };
-  }
-
-  return {
-    isDangerous: false,
-    isRoot: false,
-    normalizedPath: trimmed,
-  };
+  return result("safe");
 }
