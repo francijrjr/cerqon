@@ -3,6 +3,8 @@ import {
   isSensitiveKeyName,
   KNOWN_SECRET_PATTERNS,
   maskSecret,
+  isSecretReference,
+  sanitizeFinding,
 } from "@cerqon/core";
 
 export const cq003ExposedSecret: Rule = {
@@ -36,15 +38,13 @@ export const cq003ExposedSecret: Rule = {
 
         // Skip placeholders like ${ENV_VAR} or <YOUR_KEY> or empty strings
         const isPlaceholder =
-          val.startsWith("${") ||
-          val.startsWith("$") ||
-          val.startsWith("<") ||
-          val.toLowerCase().includes("placeholder") ||
+          isSecretReference(val) ||
           val.trim() === "";
         if (isPlaceholder) continue;
 
         let detectedSecret = false;
         let matchedPatternName = "";
+        let confidence: "confirmed" | "likely" | "heuristic" = "confirmed";
 
         // 1. Check against known secret regexes
         for (const pattern of KNOWN_SECRET_PATTERNS) {
@@ -56,9 +56,12 @@ export const cq003ExposedSecret: Rule = {
         }
 
         // 2. Check if key name indicates a sensitive secret and value has meaningful length
-        if (!detectedSecret && isSensitiveKeyName(key) && val.length >= 8) {
+        const credentialFreeUrl = /^(?:postgres(?:ql)?|mysql|mongodb(?:\+srv)?|rediss?):\/\//i.test(val) && !val.includes("@");
+        const nonSecretLiteral = /^(?:true|false|null|none|disabled|enabled|placeholder|[0-9]+)$/i.test(val.trim());
+        if (!detectedSecret && !credentialFreeUrl && !nonSecretLiteral && isSensitiveKeyName(key) && val.length >= 4) {
           detectedSecret = true;
           matchedPatternName = `Sensitive variable '${key}'`;
+          confidence = val.length >= 8 ? "likely" : "heuristic";
         }
 
         if (detectedSecret) {
@@ -67,12 +70,13 @@ export const cq003ExposedSecret: Rule = {
             ? `Server '${serverName}' env`
             : "Agent root env";
 
-          findings.push({
+          findings.push(sanitizeFinding({
             id: `CQ-003-${serverName || "root"}-${key}`,
             ruleId: "CQ-003",
             title: "Exposed Agent Secret",
             description: `Exposed secret detected in ${locationSource}: ${key}=${masked}`,
-            severity: "critical",
+            severity: confidence === "confirmed" ? "critical" : confidence === "likely" ? "high" : "medium",
+            confidence,
             location: {
               file: config.sourcePath,
             },
@@ -87,7 +91,7 @@ export const cq003ExposedSecret: Rule = {
               key,
               maskedValue: masked,
             },
-          });
+          }, [val]));
         }
       }
     };

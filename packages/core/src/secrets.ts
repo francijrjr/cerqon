@@ -22,7 +22,7 @@ export const KNOWN_SECRET_PATTERNS: SecretPattern[] = [
   },
   {
     name: "GitHub Token",
-    regex: /\bgh[pousr]_[A-Za-z0-9_]{36,}\b/,
+    regex: /\b(?:gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,})\b/,
     description: "GitHub personal access token detected in configuration",
   },
   {
@@ -37,7 +37,7 @@ export const KNOWN_SECRET_PATTERNS: SecretPattern[] = [
   },
   {
     name: "Database Connection String",
-    regex: /(?:postgres|postgresql|mysql|mongodb|redis):\/\/[^:\s]+:[^@\s]+@[^\s]+/,
+    regex: /(?:postgres|postgresql|mysql|mongodb(?:\+srv)?|rediss?):\/\/[^:\s]*:[^@\s]+@[^\s]+/,
     description: "Database connection string containing embedded credentials",
   },
 ];

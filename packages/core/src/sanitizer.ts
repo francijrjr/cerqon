@@ -20,7 +20,8 @@ export function sanitizeUnknownValue(value: unknown, secrets: readonly string[] 
     }
     result = result.replace(/\b(?:gh[pousr]_[A-Za-z0-9_]{10,}|github_pat_[A-Za-z0-9_]+)\b/g, "****");
     result = result.replace(/-----BEGIN (?:[A-Z]+ )?PRIVATE KEY-----[\s\S]*?(?:-----END (?:[A-Z]+ )?PRIVATE KEY-----|$)/g, "****");
-    result = result.replace(/((?:--)?[\w-]*(?:password|secret|token|api[_-]?key|access[_-]?key)[\w-]*[=:\s]+)(?:"[^"]*"|'[^']*'|[^\s&,;]+)/gi, "$1****");
+    result = result.replace(/((?:--)?[\w-]*(?:password|secret|token|api[_-]?key|access[_-]?key)[\w-]*[=:]\s*|--[\w-]*(?:password|secret|token|api[_-]?key|access[_-]?key)[\w-]*\s+)("[^"]*"|'[^']*'|[^\s&,;]+)/gi,
+      (_match, prefix: string, value: string) => prefix + (value.includes("****") ? value : "****"));
     // Prevent terminal control characters in configuration-controlled strings.
     return Array.from(result).filter((char) => char === "\n" || char === "\t" || (char.charCodeAt(0) >= 32 && char.charCodeAt(0) !== 127)).join("");
   };
