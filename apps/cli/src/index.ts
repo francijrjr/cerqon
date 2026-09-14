@@ -6,7 +6,7 @@ import { handleFutureCommand } from "./commands/future.js";
 
 const VERSION = "0.1.0";
 
-const program = new Command();
+const program = new Command().exitOverride();
 
 program
   .name("cerqon")
@@ -81,7 +81,6 @@ program
   .description("Evaluate and enforce custom security policies as code [Roadmap 0.4]")
   .action(() => handleFutureCommand("policy", "0.4"));
 
-program.exitOverride();
 program.parseAsync(process.argv).catch((error: unknown) => {
   if (error instanceof CommanderError) {
     process.exitCode = error.exitCode === 0 ? 0 : 2;

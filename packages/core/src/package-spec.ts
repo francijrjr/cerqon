@@ -13,7 +13,7 @@ export interface PackageSpecAnalysis {
 export function analyzePackageSpec(spec: string): PackageSpecAnalysis {
   try {
     const parsed = npa(spec);
-    const target = parsed.type === "alias" ? parsed.subSpec! : parsed;
+    const target = parsed.type === "alias" ? (parsed as npa.AliasResult).subSpec : parsed;
     const isExactVersion = target.type === "version";
     const pinnedGit = target.type === "git" && /^[a-f0-9]{40}(?:[a-f0-9]{24})?$/i.test(target.gitCommittish ?? "");
     const local = target.type === "directory" || target.type === "file";
