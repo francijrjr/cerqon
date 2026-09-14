@@ -1,4 +1,4 @@
-import { Command } from "commander";
+import { Command, CommanderError } from "commander";
 import { handleScanCommand } from "./commands/scan.js";
 import { handleRulesCommand } from "./commands/rules.js";
 import { handleDoctorCommand } from "./commands/doctor.js";
@@ -81,4 +81,12 @@ program
   .description("Evaluate and enforce custom security policies as code [Roadmap 0.4]")
   .action(() => handleFutureCommand("policy", "0.4"));
 
-program.parse(process.argv);
+program.exitOverride();
+program.parseAsync(process.argv).catch((error: unknown) => {
+  if (error instanceof CommanderError) {
+    process.exitCode = error.exitCode === 0 ? 0 : 2;
+  } else {
+    console.error("CERQON_INTERNAL_SCANNER_ERROR: command failed.");
+    process.exitCode = 3;
+  }
+});

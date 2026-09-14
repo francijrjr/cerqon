@@ -1,11 +1,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { EnvironmentStats, ScanResult, ScanDiagnostic } from "@cerqon/types";
-import { AdapterRegistry } from "@cerqon/adapters";
+import { AdapterRegistry, readConfiguration } from "@cerqon/adapters";
 import { RiskEngine } from "@cerqon/risk-engine";
 import { collectSecretValues, sanitizeUnknownValue } from "@cerqon/core";
 
 export class ScanTargetNotFoundError extends Error {
+  readonly code = "CERQON_SCAN_TARGET_NOT_FOUND";
   constructor(public readonly targetPath: string) {
     super(`Target does not exist: ${targetPath}`);
     this.name = "ScanTargetNotFoundError";
@@ -39,22 +40,12 @@ export class Scanner {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") throw new ScanTargetNotFoundError(targetPath);
       throw error;
     }
-    const targetDir = stat.isDirectory() ? resolvedPath : path.dirname(resolvedPath);
-
-    // Discovery phase via registered adapters
     const diagnostics: ScanDiagnostic[] = [];
-    const configs = await this.adapterRegistry.discoverAll(targetDir, diagnostics);
-
-    // If scanning a direct file not captured yet, attempt generic parsing
-    if (!stat.isDirectory() && configs.length === 0) {
-      const genericAdapter = this.adapterRegistry
-        .getAdapters()
-        .find((a) => a.name === "Generic MCP");
-      if (genericAdapter) {
-        const discovered = await genericAdapter.discover(targetDir, diagnostics);
-        configs.push(...discovered);
-      }
-    }
+    const directConfig = stat.isFile() ? await readConfiguration(resolvedPath, "Generic MCP", diagnostics) : null;
+    const configs = stat.isDirectory()
+      ? await this.adapterRegistry.discoverAll(resolvedPath, diagnostics)
+      : directConfig ? [directConfig] : [];
+    if (!stat.isFile() && !stat.isDirectory()) diagnostics.push({ code: "CERQON_INVALID_TARGET", severity: "error", message: "Target must be a regular file or directory.", file: resolvedPath });
 
     // Compute environment statistics
     const environment: EnvironmentStats = {

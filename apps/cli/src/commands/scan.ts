@@ -1,5 +1,6 @@
 import { JsonReporter, TerminalReporter } from "@cerqon/reporters";
-import { Scanner } from "@cerqon/scanner";
+import { Scanner, ScanTargetNotFoundError } from "@cerqon/scanner";
+import { sanitizeUnknownValue } from "@cerqon/core";
 import chalk from "chalk";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -19,14 +20,20 @@ export async function handleScanCommand(
   targetPath = ".",
   rawOptions: unknown,
 ): Promise<void> {
-  const options = ScanOptionsSchema.parse(rawOptions);
+  const parsed = ScanOptionsSchema.safeParse(rawOptions);
+  if (!parsed.success) {
+    console.error("CERQON_INVALID_USAGE: invalid scan options; --fail-on accepts critical or high.");
+    process.exitCode = 2;
+    return;
+  }
+  const options = parsed.data;
   const resolvedTarget = path.resolve(targetPath);
 
   // If not JSON mode, show nice spinner
   const spinner = options.json
     ? null
     : ora({
-        text: `Scanning environment at ${chalk.cyan(targetPath)}...`,
+        text: `Scanning environment at ${chalk.cyan(String(sanitizeUnknownValue(targetPath)))}...`,
         spinner: "dots",
       }).start();
 
@@ -75,9 +82,10 @@ export async function handleScanCommand(
     if (spinner) {
       spinner.fail(chalk.red("Scan failed."));
     }
-    console.error(
-      chalk.red(`\nError executing CERQON scan: ${(error as Error).message}`),
-    );
-    process.exitCode = error instanceof Error && error.name === "ScanTargetNotFoundError" ? 2 : 3;
+    const missing = error instanceof ScanTargetNotFoundError;
+    console.error(missing
+      ? `${error.code}\nTarget does not exist: ${sanitizeUnknownValue(targetPath)}`
+      : "CERQON_INTERNAL_SCANNER_ERROR: scan or report output could not be completed.");
+    process.exitCode = missing ? 2 : 3;
   }
 }
