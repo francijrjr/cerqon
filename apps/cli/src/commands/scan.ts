@@ -33,6 +33,10 @@ export async function handleScanCommand(
   try {
     const scanner = new Scanner({ verbose: options.verbose });
     const result = await scanner.scan(resolvedTarget);
+    const failed = options.failOn === "high"
+      ? result.summary.critical + result.summary.high > 0
+      : options.failOn === "critical" && result.summary.critical > 0;
+    process.exitCode = failed ? 1 : 0;
 
     if (spinner) {
       spinner.stop();
@@ -66,12 +70,6 @@ export async function handleScanCommand(
       );
     }
 
-    const failed = options.failOn === "high"
-      ? result.summary.critical + result.summary.high > 0
-      : result.summary.critical > 0;
-    if (failed) {
-      process.exitCode = 1;
-    }
   } catch (error) {
     if (spinner) {
       spinner.fail(chalk.red("Scan failed."));
