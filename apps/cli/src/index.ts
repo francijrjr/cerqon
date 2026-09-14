@@ -4,7 +4,7 @@ import { handleRulesCommand } from "./commands/rules.js";
 import { handleDoctorCommand } from "./commands/doctor.js";
 import { handleFutureCommand } from "./commands/future.js";
 
-const VERSION = "0.1.0";
+const VERSION = "0.1.0-alpha.1";
 
 const program = new Command().exitOverride();
 

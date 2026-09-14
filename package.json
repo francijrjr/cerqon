@@ -1,6 +1,6 @@
 {
   "name": "cerqon-monorepo",
-  "version": "0.1.0",
+  "version": "0.1.0-alpha.1",
   "private": true,
   "type": "module",
   "description": "Security & Control for Autonomous AI",
@@ -9,7 +9,7 @@
   "engines": { "node": ">=20.19.0" },
   "packageManager": "pnpm@10.16.1",
   "scripts": {
-    "build": "pnpm --filter @cerqon/types run build && pnpm --filter @cerqon/core run build && pnpm --filter @cerqon/policy-engine run build && pnpm --filter @cerqon/adapters run build && pnpm --filter @cerqon/risk-engine run build && pnpm --filter @cerqon/reporters run build && pnpm --filter @cerqon/scanner run build && pnpm --filter @cerqon/cli run build",
+    "build": "pnpm --filter @cerqon/types run build && pnpm --filter @cerqon/core run build && pnpm --filter @cerqon/policy-engine run build && pnpm --filter @cerqon/adapters run build && pnpm --filter @cerqon/rules-engine run build && pnpm --filter @cerqon/risk-engine run build && pnpm --filter @cerqon/reporters run build && pnpm --filter @cerqon/scanner run build && pnpm --filter @cerqon/cli run build",
     "test": "vitest run",
     "verify:package": "node scripts/verify-package.mjs",
     "typecheck": "pnpm -r exec tsc --noEmit && tsc -p tsconfig.tests.json",

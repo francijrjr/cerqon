@@ -26,7 +26,7 @@ export class Scanner {
   constructor(options: ScannerOptions = {}) {
     this.adapterRegistry = new AdapterRegistry();
     this.riskEngine = new RiskEngine();
-    this.version = options.version || "0.1.0";
+    this.version = options.version || "0.1.0-alpha.1";
   }
 
   async scan(targetPath: string): Promise<ScanResult> {

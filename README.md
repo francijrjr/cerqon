@@ -113,14 +113,14 @@ Security Report
 
 | Rule ID | Title | Severity | Status | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| `CQ-001` | **Excessive Tool Permission** | `HIGH` | Architecture | Tools granted wildcard or broad action permissions |
+| `CQ-001` | **Excessive Tool Permission** | `HIGH` | **Active** | Structured wildcard or administrator permissions |
 | `CQ-002` | **Unrestricted Filesystem Access** | `CRITICAL` | **Active** | Root (`/`, `C:\`) or unrestricted filesystem mount exposed to agent |
 | `CQ-003` | **Exposed Agent Secret** | `CRITICAL` | **Active** | Hardcoded API keys, tokens, or credentials in configuration |
 | `CQ-004` | **Excessive OAuth Scope** | `MEDIUM` | Architecture | Overly broad OAuth scopes granted to agent integrations |
-| `CQ-005` | **Unsafe Shell Capability** | `HIGH` | **Active** | Unrestricted terminal/shell execution capability (`bash`, `powershell`, `exec`) |
-| `CQ-006` | **Untrusted MCP Server** | `HIGH` | **Active** | Server connecting to unverified remote endpoints or unpinned commands |
-| `CQ-007` | **Missing Human Approval** | `MEDIUM` | Architecture | Mutating actions permitted without human-in-the-loop validation |
-| `CQ-008` | **Agent Network Exposure** | `HIGH` | Architecture | Agent exposed to unauthenticated inbound network access |
+| `CQ-005` | **Dangerous Shell Capability** | `HIGH` | **Active** | Terminal/shell execution capability (`bash`, `powershell`, `exec`) |
+| `CQ-006` | **Unverified MCP Source** | `HIGH` | **Active** | Mutable packages or remote sources without immutable pins |
+| `CQ-007` | **Missing Human Approval** | `HIGH` | **Active** | Wildcard tool auto-approval |
+| `CQ-008` | **Unsafe Network Transport** | `HIGH` | **Active** | Remote unencrypted HTTP or WebSocket transport |
 | `CQ-009` | **Tool Definition Drift** | `LOW` | Architecture | Local tool definition deviates from approved registry hash |
 | `CQ-010` | **Missing Audit Trail** | `LOW` | Architecture | Agent execution logging or session audit disabled |
 | `CQ-011` | **Cross-Agent Data Exposure** | `HIGH` | Architecture | Shared memory or filesystem context between untrusted agents |
@@ -133,9 +133,11 @@ Security Report
 - [x] **0.1 - Core Foundation & CLI**
   - Modular monorepo with `@cerqon/*` packages
   - MCP configuration parsers (Claude Desktop, Cursor, VS Code, Generic)
-  - Implemented rules: `CQ-002`, `CQ-003`, `CQ-005`, `CQ-006`
+  - Implemented rules: `CQ-001`, `CQ-002`, `CQ-003`, `CQ-005`, `CQ-006`, `CQ-007`, `CQ-008`
   - Dynamic 0-100 Security Score
-  - Terminal card reporter and JSON output
+  - Terminal, JSON and SARIF output
+  - Bounded recursive project discovery and direct-file scanning
+  - GitHub Action with threshold outputs
 - [ ] **0.2 - Governance & CI**
   - SARIF standard output format
   - Expanded agent adapters (LangChain, AutoGen, CrewAI manifests)
@@ -153,3 +155,19 @@ Security Report
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE) for details.
+
+## Machine-readable scans and exit codes
+
+`cerqon scan . --json` writes only JSON to stdout. SARIF is available with
+`cerqon scan . --format sarif`. Add `--fail-on critical` or `--fail-on high` to
+enforce a security threshold. Without `--fail-on`, findings do not make an
+interactive scan fail.
+
+Exit codes are 0 for a completed scan whose configured threshold passed, 1 for
+a failed threshold, 2 for invalid input or an incomplete user-level scan, and 3
+for an internal, adapter, or rule failure. Results include `scanStatus` and
+`diagnostics`; an incomplete scan has a null score and is never presented as a
+clean 100/100 result.
+
+The root `action.yml` provides a composite GitHub Action. It accepts `path`,
+`fail-on`, and `format` inputs and exposes score and severity outputs.
