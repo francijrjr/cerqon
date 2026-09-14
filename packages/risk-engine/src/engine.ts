@@ -1,6 +1,7 @@
 import type { AgentConfiguration, Finding, Rule } from "@cerqon/types";
 import { ACTIVE_CERQON_RULES, ALL_CERQON_RULES } from "./rules/index.js";
 import { calculateRiskScore, type ScoreCalculationResult } from "./score.js";
+import { collectSecretValues, sanitizeFinding } from "@cerqon/core";
 
 export class RiskEngine {
   private rules: Rule[];
@@ -35,7 +36,8 @@ export class RiskEngine {
       }
     }
 
-    return findings;
+    const secrets = collectSecretValues(config);
+    return findings.map((finding) => sanitizeFinding(finding, secrets));
   }
 
   evaluateAll(configs: AgentConfiguration[]): {

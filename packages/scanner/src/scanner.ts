@@ -3,6 +3,7 @@ import path from "node:path";
 import type { EnvironmentStats, ScanResult } from "@cerqon/types";
 import { AdapterRegistry } from "@cerqon/adapters";
 import { RiskEngine } from "@cerqon/risk-engine";
+import { collectSecretValues, sanitizeUnknownValue } from "@cerqon/core";
 
 export class ScanTargetNotFoundError extends Error {
   constructor(public readonly targetPath: string) {
@@ -80,7 +81,7 @@ export class Scanner {
 
     const durationMs = Date.now() - startTime;
 
-    return {
+    return sanitizeUnknownValue({
       schemaVersion: "1",
       cerqonVersion: this.version,
       timestamp: new Date().toISOString(),
@@ -90,6 +91,6 @@ export class Scanner {
       environment,
       findings,
       durationMs,
-    };
+    }, collectSecretValues(configs)) as ScanResult;
   }
 }
