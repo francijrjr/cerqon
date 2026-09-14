@@ -1,0 +1,41 @@
+name: CERQON Security Scan
+description: Scan AI agent and MCP configurations for security findings.
+author: CERQON Contributors
+inputs:
+  path:
+    description: Directory or configuration file to scan.
+    required: false
+    default: .
+  fail-on:
+    description: Optional threshold, critical or high.
+    required: false
+  format:
+    description: Output format, terminal, json, or sarif.
+    required: false
+    default: sarif
+outputs:
+  score:
+    description: Security score, when the scan is complete.
+  critical:
+    description: Critical finding count.
+  high:
+    description: High finding count.
+  scan-status:
+    description: Complete, partial, or failed.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        CERQON_PATH: ${{ inputs.path }}
+        CERQON_FAIL_ON: ${{ inputs.fail-on }}
+        CERQON_FORMAT: ${{ inputs.format }}
+      run: |
+        set -euo pipefail
+        args=(scan "$CERQON_PATH" --json)
+        if [ -n "$CERQON_FAIL_ON" ]; then args+=(--fail-on "$CERQON_FAIL_ON"); fi
+        node "$GITHUB_ACTION_PATH/apps/cli/dist/index.js" "${args[@]}" > "$RUNNER_TEMP/cerqon-report"
+        if [ "$CERQON_FORMAT" = "sarif" ]; then
+          node "$GITHUB_ACTION_PATH/apps/cli/dist/index.js" scan "$CERQON_PATH" --format sarif > "$RUNNER_TEMP/cerqon.sarif"
+        fi
+        node -e 'const fs=require("fs"); const p=process.env.RUNNER_TEMP+"/cerqon-report"; const x=JSON.parse(fs.readFileSync(p)); for (const [k,v] of [["score",x.score], ["critical",x.summary.critical], ["high",x.summary.high], ["scan-status",x.scanStatus]]) console.log(`${k}=${v}`);' >> "$GITHUB_OUTPUT"

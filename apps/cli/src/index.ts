@@ -19,6 +19,7 @@ program
   .option("-v, --verbose", "Display verbose findings including evidence details")
   .option("--json", "Output scan results in machine-readable JSON")
   .option("--fail-on <severity>", "Fail on critical or high findings")
+  .option("--format <format>", "Output format: terminal, json, or sarif")
   .option("-o, --output <file>", "Save scan report to specified file path")
   .action(async (targetPath = ".", options) => {
     await handleScanCommand(targetPath, options);

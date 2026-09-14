@@ -6,6 +6,8 @@ import { cq006UntrustedServer } from "./cq006-untrusted-server.js";
 import { futureRules } from "./future-rules.js";
 import { cq007MissingApproval } from "./cq007-approval.js";
 import { cq008UnsafeTransport } from "./cq008-transport.js";
+import { cq001ExcessiveToolPermission } from "./cq001-permissions.js";
+export * from "./cq001-permissions.js";
 export * from "./cq007-approval.js";
 export * from "./cq008-transport.js";
 
@@ -17,7 +19,7 @@ export * from "./future-rules.js";
 
 export const ALL_CERQON_RULES: Rule[] = [
   // CQ-001
-  futureRules.find((r) => r.id === "CQ-001")!,
+  cq001ExcessiveToolPermission,
   // CQ-002 (Active)
   cq002UnrestrictedFilesystem,
   // CQ-003 (Active)

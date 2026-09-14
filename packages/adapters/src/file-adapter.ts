@@ -43,7 +43,8 @@ export async function readConfiguration(file: string, adapter: string, diagnosti
       tools = cfg.tools.map((rawTool) => {
         const tool = object(rawTool);
         if (typeof tool.name !== "string" || (tool.description !== undefined && typeof tool.description !== "string")) throw new Error("Invalid tool");
-        return { name: tool.name, description: tool.description as string | undefined };
+        const permissions = tool.permissions === undefined ? undefined : Array.isArray(tool.permissions) && tool.permissions.every((permission) => typeof permission === "string") ? tool.permissions as string[] : (() => { throw new Error("Invalid permissions"); })();
+        return { name: tool.name, description: tool.description as string | undefined, permissions, parameters: tool.parameters as Record<string, unknown> | undefined };
       });
     }
     return { id: `${adapter}:${file}`, name: typeof cfg.name === "string" ? cfg.name : adapter,

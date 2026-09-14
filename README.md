@@ -5,7 +5,7 @@
 
 ---
 
-**CERQON is the security control plane for autonomous AI.**
+CERQON is an open-source security scanner for AI agents and MCP configurations. A security control plane for autonomous AI is the long-term vision.
 
 As organizations deploy AI agents with autonomous tooling (Model Context Protocol / MCP, shell execution, database connectors, and filesystem access), security boundaries become blurred. 
 
@@ -21,10 +21,10 @@ CERQON provides static analysis, risk scoring, credential masking, and governanc
 - 🔍 **Discovery & Static Analysis**: Automatically discovers MCP servers, agent manifests, and tool configurations across Claude Desktop, Cursor, VS Code (Roo/Cline), and generic environments.
 - 🛡️ **CERQON Rules Engine**: Analyzes configurations against a structured catalog of agent security vulnerabilities (`CQ-001` through `CQ-012`).
 - 📁 **Filesystem Blast Radius**: Identifies unconstrained filesystem mounts (`/`, `C:\`, home directories) that expose host operating system files.
-- 🔑 **Zero-Leak Secret Detection**: Detects hardcoded API keys, private keys, and tokens in agent configurations with memory-level masking (`sk-****...****`). Secrets are never logged or exported.
+- 🔑 **Secret Detection & Redaction**: Detects hardcoded API keys, private keys, and tokens in agent configurations with masking (`sk-****...****`).
 - ⚡ **Shell Capability Detection**: Flags unrestricted execution capabilities (`bash`, `powershell`, `cmd`, `exec`) lacking explicit confirmation guardrails.
 - 📊 **Security Score (0 - 100)**: Quantitative posture score with transparent deductions based on severity.
-- 🔒 **Local-First & Defensive**: 100% offline. Zero telemetry. Zero remote uploads.
+- 🔒 **Local-First & Defensive**: Designed to operate locally with no telemetry required.
 
 ---
 

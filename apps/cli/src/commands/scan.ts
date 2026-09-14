@@ -1,4 +1,4 @@
-import { JsonReporter, TerminalReporter } from "@cerqon/reporters";
+import { JsonReporter, TerminalReporter, formatSarif } from "@cerqon/reporters";
 import { Scanner, ScanTargetNotFoundError } from "@cerqon/scanner";
 import { sanitizeUnknownValue } from "@cerqon/core";
 import chalk from "chalk";
@@ -12,6 +12,7 @@ const ScanOptionsSchema = z.object({
   json: z.boolean().optional(),
   output: z.string().optional(),
   failOn: z.enum(["critical", "high"]).optional(),
+  format: z.enum(["terminal", "json", "sarif"]).optional(),
 });
 
 export type ScanCliOptions = z.infer<typeof ScanOptionsSchema>;
@@ -50,7 +51,7 @@ export async function handleScanCommand(
       spinner.stop();
     }
 
-    if (options.json) {
+    if (options.json || options.format === "json") {
       const jsonReporter = new JsonReporter();
       const output = jsonReporter.format(result);
       if (options.output) {
@@ -58,6 +59,13 @@ export async function handleScanCommand(
       } else {
         console.log(output);
       }
+      return;
+    }
+
+    if (options.format === "sarif") {
+      const output = formatSarif(result);
+      if (options.output) await fs.writeFile(path.resolve(options.output), output, "utf8");
+      else process.stdout.write(output + "\n");
       return;
     }
 
