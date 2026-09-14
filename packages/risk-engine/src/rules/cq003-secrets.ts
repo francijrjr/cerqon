@@ -97,6 +97,7 @@ export const cq003ExposedSecret: Rule = {
 
     // Check each server's env
     for (const server of config.servers) {
+      if (server.disabled) continue;
       checkEnvBlock(server.env, server.name);
     }
 

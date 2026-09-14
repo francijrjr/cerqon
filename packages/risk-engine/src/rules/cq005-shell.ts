@@ -23,6 +23,7 @@ export const cq005UnsafeShell: Rule = {
 
     // Check MCP servers
     for (const server of config.servers) {
+      if (server.disabled) continue;
       const check = detectShellCapability(server.command, server.args, server.name);
       if (check.hasShellCapability) {
         findings.push({

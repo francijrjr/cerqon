@@ -22,6 +22,7 @@ export const cq002UnrestrictedFilesystem: Rule = {
     const { config } = context;
 
     for (const server of config.servers) {
+      if (server.disabled) continue;
       // Check explicit rootPaths or paths in arguments
       const pathsToCheck: string[] = [];
       if (server.rootPaths) {

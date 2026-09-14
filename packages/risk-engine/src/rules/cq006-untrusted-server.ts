@@ -21,6 +21,7 @@ export const cq006UntrustedServer: Rule = {
     const { config } = context;
 
     for (const server of config.servers) {
+      if (server.disabled) continue;
       // 1. Check unencrypted HTTP transport
       if (server.url && server.url.startsWith("http://")) {
         // Exclude localhost/127.0.0.1 for local dev unless explicitly wanted

@@ -25,7 +25,8 @@ export class RiskEngine {
     diagnostics: ScanDiagnostic[] = []
   ): Finding[] {
     const findings: Finding[] = [];
-    const context = { config, allConfigs };
+    const active = (cfg: AgentConfiguration): AgentConfiguration => ({ ...cfg, servers: cfg.servers.filter((server) => !server.disabled) });
+    const context = { config: active(config), allConfigs: allConfigs?.map(active) };
 
     for (const rule of this.rules) {
       if (!rule.isImplemented) continue;
