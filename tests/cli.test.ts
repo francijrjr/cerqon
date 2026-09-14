@@ -20,5 +20,10 @@ describe("CLI exit policy", () => {
     const result = run("scan", "examples/secure-agent", "--json", "--fail-on", "critical");
     expect(result.status).toBe(0);
     expect(JSON.parse(result.stdout).score).toBe(100);
+    const report = JSON.parse(result.stdout);
+    expect(report.schemaVersion).toBe("1");
+    expect(report.scanStatus).toBe("complete");
+    expect(report.diagnostics).toEqual([]);
+    expect(report.durationMs).toBeGreaterThanOrEqual(0);
   });
 });

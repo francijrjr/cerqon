@@ -15,6 +15,7 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@cerqon/core": "workspace:*",
     "@cerqon/types": "workspace:*",
     "chalk": "^5.4.1"
   },

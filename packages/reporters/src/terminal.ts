@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import { sanitizeUnknownValue } from "@cerqon/core";
 import type { Finding, ScanResult, Severity } from "@cerqon/types";
 
 export interface TerminalReporterOptions {
@@ -7,6 +8,7 @@ export interface TerminalReporterOptions {
 
 export class TerminalReporter {
   format(result: ScanResult, options: TerminalReporterOptions = {}): string {
+    result = sanitizeUnknownValue(result) as ScanResult;
     const lines: string[] = [];
 
     // Header banner
