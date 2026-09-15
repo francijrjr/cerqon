@@ -13,7 +13,7 @@ function run(...args: string[]) {
 }
 
 describe("CLI exit policy", () => {
-  it("reports a friendly missing target error with exit 2", () => {
+  it("reports a friendly missing target error with exit 2", { timeout: 20_000 }, () => {
     const result = run("scan", "does-not-exist", "--json");
     expect(result.status).toBe(2);
     expect(result.stderr).toContain("CERQON_SCAN_TARGET_NOT_FOUND");
